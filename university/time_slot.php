@@ -141,6 +141,18 @@ $result = $conn->query($sql);
             margin-bottom: 10px;
             text-align: center;
         }
+
+        .submit-button {
+            margin-left: 10px; /* Adds spacing to the left */
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
     </style>
 </head>
 <body>
@@ -155,12 +167,13 @@ $result = $conn->query($sql);
         <form method="POST" class="time_slot-form">
             <input type="hidden" name="time_slot_id" value="<?php echo isset($row) ? $row['time_slot_id'] : ''; ?>">
             <label>Day of Week:</label> 
-            <input type="text" name="day_of_week" required value="<?php echo isset($row) ? $row['day_of_week'] : ''; ?>">
+            <input type="text"id="day_of_week" name="day_of_week" required value="<?php echo isset($row) ? $row['day_of_week'] : ''; ?>">
             <label>Start Time:</label> 
-            <input type="time" name="start_time" required value="<?php echo isset($row) ? $row['start_time'] : ''; ?>">
+            <input type="time" id="start_time" name="start_time" required value="<?php echo isset($row) ? $row['start_time'] : ''; ?>">
             <label>End Time:</label> 
-            <input type="time" name="end_time" required value="<?php echo isset($row) ? $row['end_time'] : ''; ?>"><br><br>
+            <input type="time" id="end_time" name="end_time" required value="<?php echo isset($row) ? $row['end_time'] : ''; ?>"><br><br>
             <input type="submit" name="<?php echo isset($row) ? 'update' : 'create'; ?>" value="<?php echo isset($row) ? 'Update Time Slot' : 'Create Time Slot'; ?>">
+            <input type="button" class="submit-button" value="Clear" onclick="clearForm()">
         </form>
 
         <!-- Read Table -->
@@ -193,6 +206,14 @@ $result = $conn->query($sql);
             ?>
         </table>
     </div>
+
+    <script>
+        function clearForm() {
+            document.getElementById('day_of_week').value = '';
+            document.getElementById('start_time').value = '';
+            document.getElementById('end_time').value = '';
+        }
+    </script>
 </body>
 
 </html>

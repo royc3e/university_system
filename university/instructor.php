@@ -134,6 +134,17 @@ $result = $conn->query($sql);
             100% { opacity: 0; display: none; }
         }
 
+        .submit-button {
+            margin-left: 10px; /* Adds spacing to the left */
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
         .back-button {
             display: flex;
             text-align: center; /* Center text within the button */
@@ -274,26 +285,25 @@ $result = $conn->query($sql);
 
     <!-- Create Form -->
     <h3>Add New Instructor</h3>
-    <form method="POST" class="instructor-form">
-        <input type="hidden" name="instructor_id" value="<?php echo isset($row) ? $row['instructor_id'] : ''; ?>">
-        <label>First Name:</label> <input type="text" name="first_name" required value="<?php echo isset($row) ? $row['first_name'] : ''; ?>">
-        <label>Middle Initial:</label> <input type="text" name="middle_initial" value="<?php echo isset($row) ? $row['middle_initial'] : ''; ?>">
-        <label>Last Name:</label> <input type="text" name="last_name" required value="<?php echo isset($row) ? $row['last_name'] : ''; ?>">
-        <label>Street Number:</label> <input type="text" name="street_number" value="<?php echo isset($row) ? $row['street_number'] : ''; ?>">
-        <label>Street Name:</label> <input type="text" name="street_name" value="<?php echo isset($row) ? $row['street_name'] : ''; ?>">
-        <label>Apt Number:</label> <input type="text" name="apt_number" value="<?php echo isset($row) ? $row['apt_number'] : ''; ?>">
-        <label>City:</label> <input type="text" name="city" value="<?php echo isset($row) ? $row['city'] : ''; ?>">
-        <label>State:</label> <input type="text" name="state" value="<?php echo isset($row) ? $row['state'] : ''; ?>">
-        <label>Postal Code:</label> <input type="text" name="postal_code" value="<?php echo isset($row) ? $row['postal_code'] : ''; ?>">
-        <label>Date of Birth:</label> <input type="date" name="date_of_birth" value="<?php echo isset($row) ? $row['date_of_birth'] : ''; ?>">
-        <label>Department ID:</label> <input type="number" name="department_id" value="<?php echo isset($row) ? $row['department_id'] : ''; ?>">
-    <div class="form-group">
-        <input type="submit" name="<?php echo isset($row) ? 'update' : 'create'; ?>" value="<?php echo isset($row) ? 'Update Instructor' : 'Create Instructor'; ?>">
+        <form method="POST" class="instructor-form">
+            <input type="hidden" id="instructor_id" name="instructor_id" value="<?php echo isset($row) ? $row['instructor_id'] : ''; ?>">
+            <label>First Name:</label> <input type="text" id="first_name" name="first_name" required value="<?php echo isset($row) ? $row['first_name'] : ''; ?>">
+            <label>Middle Initial:</label> <input type="text" id="middle_initial" name="middle_initial" value="<?php echo isset($row) ? $row['middle_initial'] : ''; ?>">
+            <label>Last Name:</label> <input type="text" id="last_name" name="last_name" required value="<?php echo isset($row) ? $row['last_name'] : ''; ?>">
+            <label>Street Number:</label> <input type="text" id="street_number" name="street_number" value="<?php echo isset($row) ? $row['street_number'] : ''; ?>">
+            <label>Street Name:</label> <input type="text" id="street_name" name="street_name" value="<?php echo isset($row) ? $row['street_name'] : ''; ?>">
+            <label>Apt Number:</label> <input type="text" id="apt_number" name="apt_number" value="<?php echo isset($row) ? $row['apt_number'] : ''; ?>">
+            <label>City:</label> <input type="text" id="city" name="city" value="<?php echo isset($row) ? $row['city'] : ''; ?>">
+            <label>State:</label> <input type="text" id="state" name="state" value="<?php echo isset($row) ? $row['state'] : ''; ?>">
+            <label>Postal Code:</label> <input type="text" id="postal_code" name="postal_code" value="<?php echo isset($row) ? $row['postal_code'] : ''; ?>">
+            <label>Date of Birth:</label> <input type="date" id="date_of_birth" name="date_of_birth" value="<?php echo isset($row) ? $row['date_of_birth'] : ''; ?>">
+            <label>Department ID:</label> <input type="number" id="department_id" name="department_id" value="<?php echo isset($row) ? $row['department_id'] : ''; ?>">
+            <div class="form-group">
+                <input type="submit" name="<?php echo isset($row) ? 'update' : 'create'; ?>" value="<?php echo isset($row) ? 'Update Instructor' : 'Create Instructor'; ?>">
+                <input type="button" class="submit-button" value="Clear" onclick="clearForm()">
+            </div>
+        </form>
     </div>
-
-    </form>
-</div>
-
 <div class="container instructor-list">
     <h3>Instructor List</h3>
     <table>
@@ -344,6 +354,21 @@ $result = $conn->query($sql);
         </tbody>
     </table>
 </div>
+    <script>
+        function clearForm() {
+            document.getElementById('first_name').value = '';
+            document.getElementById('middle_initial').value = '';
+            document.getElementById('last_name').value = '';
+            document.getElementById('street_number').value = '';
+            document.getElementById('street_name').value = '';
+            document.getElementById('apt_number').value = '';
+            document.getElementById('city').value = '';
+            document.getElementById('state').value = '';
+            document.getElementById('postal_code').value = '';
+            document.getElementById('date_of_birth').value = '';
+            document.getElementById('department_id').value = '';
+        }
+    </script>
     
 </body>
 </html>

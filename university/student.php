@@ -221,6 +221,18 @@ $result = $conn->query($sql);
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             margin-bottom: 20px;
         }
+
+        .submit-button {
+            margin-left: 10px; /* Adds spacing to the left */
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
     </style>
 </head>
 <body>
@@ -233,25 +245,25 @@ $result = $conn->query($sql);
 
     <!-- Create Form -->
     <h3>Add New Student</h3>
-    <form method="POST" class="student-form">
-        <input type="hidden" name="student_id" value="<?php echo isset($row) ? $row['student_id'] : ''; ?>">
-        <label>First Name:</label>
-        <input type="text" name="first_name" required value="<?php echo isset($row) ? $row['first_name'] : ''; ?>">
-        <label>Middle Initial:</label>
-        <input type="text" name="middle_initial" maxlength="1" value="<?php echo isset($row) ? $row['middle_initial'] : ''; ?>">
-        <label>Last Name:</label>
-        <input type="text" name="last_name" required value="<?php echo isset($row) ? $row['last_name'] : ''; ?>">
-        <label>Date of Birth:</label>
-        <input type="date" name="date_of_birth" required value="<?php echo isset($row) ? $row['date_of_birth'] : ''; ?>">
-        <label>Department Name:</label>
-        <input type="text" name="department_name" required value="<?php echo isset($row) ? $row['department_name'] : ''; ?>">
-        <label>Email:</label>
-        <input type="email" name="email" required value="<?php echo isset($row) ? $row['email'] : ''; ?>">
-    <div class="form-group">
-        <input type="submit" name="<?php echo isset($row) ? 'update' : 'create'; ?>" value="<?php echo isset($row) ? 'Update Student' : 'Create Student'; ?>">
-    </div>
-
-    </form>
+        <form method="POST" class="student-form">
+            <input type="hidden" id="student_id" name="student_id" value="<?php echo isset($row) ? $row['student_id'] : ''; ?>">
+            <label>First Name:</label>
+            <input type="text" id="first_name" name="first_name" required value="<?php echo isset($row) ? $row['first_name'] : ''; ?>">
+            <label>Middle Initial:</label>
+            <input type="text" id="middle_initial" name="middle_initial" maxlength="1" value="<?php echo isset($row) ? $row['middle_initial'] : ''; ?>">
+            <label>Last Name:</label>
+            <input type="text" id="last_name" name="last_name" required value="<?php echo isset($row) ? $row['last_name'] : ''; ?>">
+            <label>Date of Birth:</label>
+            <input type="date" id="date_of_birth" name="date_of_birth" required value="<?php echo isset($row) ? $row['date_of_birth'] : ''; ?>">
+            <label>Department Name:</label>
+            <input type="text" id="department_name" name="department_name" required value="<?php echo isset($row) ? $row['department_name'] : ''; ?>">
+            <label>Email:</label>
+            <input type="email" id="email" name="email" required value="<?php echo isset($row) ? $row['email'] : ''; ?>">
+            <div class="form-group">
+                <input type="submit" name="<?php echo isset($row) ? 'update' : 'create'; ?>" value="<?php echo isset($row) ? 'Update Student' : 'Create Student'; ?>">
+                <input type="button" class="submit-button" value="Clear" onclick="clearForm()">
+            </div>
+        </form>
 
     <!-- Read Table -->
     <h3>Student List</h3>
@@ -289,6 +301,18 @@ $result = $conn->query($sql);
         ?>
     </table>
 </div>
+
+    <script>
+        function clearForm() {
+            document.getElementById('student_id').value = '';
+            document.getElementById('first_name').value = '';
+            document.getElementById('middle_initial').value = '';
+            document.getElementById('last_name').value = '';
+            document.getElementById('date_of_birth').value = '';
+            document.getElementById('department_name').value = '';
+            document.getElementById('email').value = '';
+        }
+    </script>
 
 </body>
 </html>

@@ -85,6 +85,7 @@ $result = $conn->query($sql);
         h2, h3 {
             color: white; /* White headings */
             margin-bottom: 10px;
+            text-align: center;
         }
 
         .error {
@@ -121,13 +122,19 @@ $result = $conn->query($sql);
         }
 
         .back-button {
-            display: inline-block;
-            margin-bottom: 20px;
-            padding: 10px 20px;
+            display: flex;
             background-color: #007BFF;
             color: white;
-            text-decoration: none;
+            padding: 8px 12px;
+            border: none;
             border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+            margin: 20px auto;
+            width: fit-content;
+            max-width: 150px;
+            text-align: center;
         }
 
         .back-button:hover {
@@ -141,6 +148,7 @@ $result = $conn->query($sql);
             background-color: #3c3c3c; /* Darker container background */
             border-radius: 8px; /* Rounded corners */
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* Shadow effect */
+            text-align: left;
         }
 
         table {
@@ -177,6 +185,52 @@ $result = $conn->query($sql);
         .action-link:hover {
             text-decoration: underline; /* Underline on hover */
         }
+
+        .classroom-form {
+            background-color: #3c3c3c;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        input[type="submit"], input[type="button"] {
+            background-color: #007BFF;
+            display: flex;
+            align-items: center;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        input[type="submit"]:hover, input[type="button"]:hover {
+            background-color: #0056b3;
+        }
+
+        .form-group {
+            display: flex;                  /* Use flexbox */
+            justify-content: center;        /* Center the button horizontally */
+            margin-top: 20px;              /* Space above the button */
+        }
+
+        .submit-button {
+            margin-left: 10px; /* Adds spacing to the left */
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .submit-button:hover {
+            background-color: #0056b3;
+        }
+
     </style>
 </head>
 <body>
@@ -187,12 +241,15 @@ $result = $conn->query($sql);
 
     <!-- Create Form -->
     <h3>Add New Classroom</h3>
-    <form method="POST">
+    <form method="POST" class="classroom-form">
         <input type="hidden" name="classroom_id" value="<?php echo isset($row) ? $row['classroom_id'] : ''; ?>">
-        <label>Building:</label> <input type="text" name="building" required value="<?php echo isset($row) ? $row['building'] : ''; ?>">
-        <label>Room Number:</label> <input type="text" name="room_number" required value="<?php echo isset($row) ? $row['room_number'] : ''; ?>">
-        <label>Capacity:</label> <input type="number" name="capacity" required value="<?php echo isset($row) ? $row['capacity'] : ''; ?>">
+        <label>Building:</label> <input type="text" id="building" name="building" required value="<?php echo isset($row) ? $row['building'] : ''; ?>">
+        <label>Room Number:</label> <input type="text" id="room_number" name="room_number" required value="<?php echo isset($row) ? $row['room_number'] : ''; ?>">
+        <label>Capacity:</label> <input type="number" id="capacity" name="capacity" required value="<?php echo isset($row) ? $row['capacity'] : ''; ?>">
+    <div class="form-group">
         <input type="submit" name="<?php echo isset($row) ? 'update' : 'create'; ?>" value="<?php echo isset($row) ? 'Update Classroom' : 'Create Classroom'; ?>">
+        <input type="button" class="submit-button" value="Clear" onclick="clearForm()">
+    </div>
     </form>
 
     <!-- Read Table -->
@@ -226,6 +283,13 @@ $result = $conn->query($sql);
     </table>
 
 </div>
+    <script>
+        function clearForm() {
+            document.getElementById('building').value = '';
+            document.getElementById('room_number').value = '';
+            document.getElementById('capacity').value = '';
+        }
+    </script>
 
 </body>
 </html>
