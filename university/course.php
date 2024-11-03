@@ -1,6 +1,10 @@
 <?php
 include 'db_connection.php';
 
+// Fetch departments for dropdown
+$departments_sql = "SELECT DISTINCT department_name FROM department";
+$departments_result = $conn->query($departments_sql);
+
 // Handle Create Operation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create'])) {
     $course_name = $_POST['course_name'];
@@ -235,6 +239,32 @@ $result = $conn->query($sql);
             background-color: #0056b3; /* Darker blue on hover */
         }
 
+        select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            width: 25%;
+            font-size: 16px;
+            background-color: #555;
+            color: white;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            border-color: #007BFF; /* Change border color on focus */
+            outline: none; /* Remove default outline */
+        }
+
+        select option {
+            padding: 10px; /* Padding for options */
+        }
+
+        /* Adding a hover effect for better UX */
+        select:hover {
+            border-color: #007BFF; /* Change border color on hover */
+        }
+
     </style>
 </head>
 <body>
@@ -255,7 +285,17 @@ $result = $conn->query($sql);
 
             <div class="form-group">
                 <label for="department_name">Department Name:</label>
-                <input type="text" id="department_name" name="department_name" required value="<?php echo isset($row) ? $row['department_name'] : ''; ?>">
+                <select id="department_name" name="department_name" required>
+                <option value="">Select Department</option>
+                <?php
+                if ($departments_result->num_rows > 0) {
+                    while ($department = $departments_result->fetch_assoc()) {
+                        $selected = (isset($row) && $row['department_name'] == $department['department_name']) ? 'selected' : '';
+                        echo "<option value=\"{$department['department_name']}\" $selected>{$department['department_name']}</option>";
+                    }
+                }
+                ?>
+            </select>
             </div>
 
             <div class="form-group">

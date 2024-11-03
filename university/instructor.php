@@ -1,6 +1,11 @@
 <?php
 include 'db_connection.php';
 
+// Fetch distinct departments
+$departments_sql = "SELECT DISTINCT department_id, department_name FROM department";
+$departments_result = $conn->query($departments_sql);
+$departments = $departments_result->fetch_all(MYSQLI_ASSOC);
+
 // Handle Create Operation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create'])) {
     $first_name = $_POST['first_name'];
@@ -13,23 +18,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create'])) {
     $state = $_POST['state'];
     $postal_code = $_POST['postal_code'];
     $date_of_birth = $_POST['date_of_birth'];
+    $salary = $_POST['salary'];
     $department_id = $_POST['department_id'];
 
     // Check for duplicate instructor
-    $check_sql = "SELECT * FROM instructor WHERE first_name='$first_name' AND last_name='$last_name' AND date_of_birth='$date_of_birth'";
-    $check_result = $conn->query($check_sql);
+    $check_sql = "SELECT * FROM instructor WHERE first_name=? AND last_name=? AND date_of_birth=?";
+    $stmt = $conn->prepare($check_sql);
+    $stmt->bind_param('sss', $first_name, $last_name, $date_of_birth);
+    $stmt->execute();
+    $check_result = $stmt->get_result();
 
     if ($check_result->num_rows > 0) {
         echo '<div class="error">Error: An instructor with the same name and date of birth already exists.</div>';
     } else {
-        // Insert the new instructor
-        $sql = "INSERT INTO instructor (first_name, middle_initial, last_name, street_number, street_name, apt_number, city, state, postal_code, date_of_birth, department_id) 
-                VALUES ('$first_name', '$middle_initial', '$last_name', '$street_number', '$street_name', '$apt_number', '$city', '$state', '$postal_code', '$date_of_birth', '$department_id')";
-        
-        if ($conn->query($sql) === TRUE) {
+        // Handle department_id for insert
+        $department_value = empty($department_id) ? NULL : $department_id;
+
+        $sql = "INSERT INTO instructor (first_name, middle_initial, last_name, street_number, street_name, apt_number, city, state, postal_code, date_of_birth, department_id, salary) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param('sssssssssssd', $first_name, $middle_initial, $last_name, $street_number, $street_name, $apt_number, $city, $state, $postal_code, $date_of_birth, $department_value, $salary);
+
+        if ($stmt->execute()) {
             echo '<div class="success">New instructor created successfully.</div>';
         } else {
-            echo '<div class="error">Error: ' . $conn->error . '</div>';
+            echo '<div class="error">Error: ' . $stmt->error . '</div>';
         }
     }
 }
@@ -37,9 +50,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create'])) {
 // Handle Update Operation
 if (isset($_GET['edit'])) {
     $id = $_GET['edit'];
-    $sql = "SELECT * FROM instructor WHERE instructor_id='$id'";
-    $result = $conn->query($sql);
+    $sql = "SELECT * FROM instructor WHERE instructor_id=?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('i', $id);
+    $stmt->execute();
+    $result = $stmt->get_result();
     $row = $result->fetch_assoc();
+    $salary = isset($row) ? $row['salary'] : '';
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
@@ -54,36 +71,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     $state = $_POST['state'];
     $postal_code = $_POST['postal_code'];
     $date_of_birth = $_POST['date_of_birth'];
+    $salary = $_POST['salary'];
     $department_id = $_POST['department_id'];
 
+    $department_value = empty($department_id) ? NULL : $department_id;
+
     $sql = "UPDATE instructor SET 
-        first_name='$first_name', middle_initial='$middle_initial', last_name='$last_name',
-        street_number='$street_number', street_name='$street_name', apt_number='$apt_number',
-        city='$city', state='$state', postal_code='$postal_code', date_of_birth='$date_of_birth', 
-        department_id='$department_id'
-        WHERE instructor_id='$id'";
+                first_name=?, middle_initial=?, last_name=?,
+                street_number=?, street_name=?, apt_number=?,
+                city=?, state=?, postal_code=?, date_of_birth=?, 
+                department_id=?, salary=?
+            WHERE instructor_id=?";
     
-    if ($conn->query($sql) === TRUE) {
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('ssssssssssdsd', $first_name, $middle_initial, $last_name, $street_number, $street_name, $apt_number, $city, $state, $postal_code, $date_of_birth, $department_value, $salary, $id);
+
+    if ($stmt->execute()) {
         echo '<div class="success">Instructor updated successfully.</div>';
     } else {
-        echo '<div class="error">Error:Error updating record: </div>'. $conn->error;
+        echo '<div class="error">Error updating record: ' . $stmt->error . '</div>';
     }
 }
 
 // Handle Delete Operation
 if (isset($_GET['delete'])) {
     $id = $_GET['delete'];
-    $sql = "DELETE FROM instructor WHERE instructor_id='$id'";
+    $sql = "DELETE FROM instructor WHERE instructor_id=?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('i', $id);
 
-    if ($conn->query($sql) === TRUE) {
-        echo '<div class="success">Instructor deleted successfully;.</div>';
+    if ($stmt->execute()) {
+        echo '<div class="success">Instructor deleted successfully.</div>';
     } else {
-        echo '<div class="error">Error:Error deleting record: </div>'. $conn->error;
+        echo '<div class="error">Error deleting record: ' . $stmt->error . '</div>';
     }
 }
 
 // Fetch all instructors for display
-$sql = "SELECT * FROM instructor";
+$sql = "SELECT instructor.*, department.department_name 
+        FROM instructor 
+        LEFT JOIN department ON instructor.department_id = department.department_id";
 $result = $conn->query($sql);
 ?>
 
@@ -169,7 +196,7 @@ $result = $conn->query($sql);
 
         .container {
             text-align: left;
-            max-width: 1000px;
+            max-width: 1050px;
             margin: auto;
             padding: 20px;
             background-color: #3c3c3c;
@@ -218,8 +245,19 @@ $result = $conn->query($sql);
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             margin-bottom: 20px;
+            width: 600px; /* Set the desired width for the form */
+            margin: auto; /* Center the form horizontally */
         }
 
+        .instructor-form input[type="text"], 
+        .instructor-form input[type="number"], {
+            width: calc(100% - 22px); /* Adjust to ensure proper padding */
+            padding: 10px;
+            border: 1px solid #444;
+            border-radius: 5px;
+            background-color: #555;
+            color: #e0e0e0;
+        }
         .instructor-list table {
             width: 50%;
             background-color: #3c3c3c;
@@ -273,6 +311,33 @@ $result = $conn->query($sql);
             justify-content: center;        /* Center the button horizontally */
             margin-top: 20px;              /* Space above the button */
         }
+
+        select {
+            background-color: #555;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            width: 35%;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            color: white;
+        }
+
+        select:focus {
+            border-color: #007BFF; /* Change border color on focus */
+            outline: none; /* Remove default outline */
+        }
+
+        select option {
+            padding: 10px; /* Padding for options */
+        }
+
+        /* Adding a hover effect for better UX */
+        select:hover {
+            border-color: #007BFF; /* Change border color on hover */
+        }
+
     </style>
 </head>
 <body>
@@ -294,10 +359,21 @@ $result = $conn->query($sql);
             <label>Street Name:</label> <input type="text" id="street_name" name="street_name" value="<?php echo isset($row) ? $row['street_name'] : ''; ?>">
             <label>Apt Number:</label> <input type="text" id="apt_number" name="apt_number" value="<?php echo isset($row) ? $row['apt_number'] : ''; ?>">
             <label>City:</label> <input type="text" id="city" name="city" value="<?php echo isset($row) ? $row['city'] : ''; ?>">
-            <label>State:</label> <input type="text" id="state" name="state" value="<?php echo isset($row) ? $row['state'] : ''; ?>">
+            <label>Province:</label> <input type="text" id="state" name="state" value="<?php echo isset($row) ? $row['state'] : ''; ?>">
             <label>Postal Code:</label> <input type="text" id="postal_code" name="postal_code" value="<?php echo isset($row) ? $row['postal_code'] : ''; ?>">
             <label>Date of Birth:</label> <input type="date" id="date_of_birth" name="date_of_birth" value="<?php echo isset($row) ? $row['date_of_birth'] : ''; ?>">
-            <label>Department ID:</label> <input type="number" id="department_id" name="department_id" value="<?php echo isset($row) ? $row['department_id'] : ''; ?>">
+            <label>Salary:</label> <input type="number" step="0.01" id="salary" name="salary" value="<?php echo isset($row) ? $row['salary'] : ''; ?>">
+            <label>Department:</label>
+                <select id="department_id" name="department_id" class="department">
+                    <option value="">Select Department</option>
+                    <?php foreach ($departments as $dept): ?>
+                        <option value="<?php echo htmlspecialchars($dept['department_id']); ?>"
+                            <?php echo (isset($row) && $row['department_id'] == $dept['department_id']) ? 'selected' : ''; ?>>
+                            <?php echo htmlspecialchars($dept['department_name']); ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
             <div class="form-group">
                 <input type="submit" name="<?php echo isset($row) ? 'update' : 'create'; ?>" value="<?php echo isset($row) ? 'Update Instructor' : 'Create Instructor'; ?>">
                 <input type="button" class="submit-button" value="Clear" onclick="clearForm()">
@@ -320,7 +396,8 @@ $result = $conn->query($sql);
                 <th>State</th>
                 <th>Postal Code</th>
                 <th>Date of Birth</th>
-                <th>Department ID</th>
+                <th>Salary</th>
+                <th>Department Name</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -340,7 +417,8 @@ $result = $conn->query($sql);
                         <td>{$row['state']}</td>
                         <td>{$row['postal_code']}</td>
                         <td>{$row['date_of_birth']}</td>
-                        <td>{$row['department_id']}</td>
+                        <td>" . htmlspecialchars($row['salary']) . "</td>   
+                        <td>" . (is_null($row['department_name']) ? 'N/A' : htmlspecialchars($row['department_name'])) . "</td>
                         <td>
                             <a href='instructor.php?edit={$row['instructor_id']}' class='action-link'>Edit</a> | 
                             <a href='instructor.php?delete={$row['instructor_id']}' class='action-link'>Delete</a>
@@ -366,6 +444,7 @@ $result = $conn->query($sql);
             document.getElementById('state').value = '';
             document.getElementById('postal_code').value = '';
             document.getElementById('date_of_birth').value = '';
+            document.getElementById('salary').value = '';
             document.getElementById('department_id').value = '';
         }
     </script>

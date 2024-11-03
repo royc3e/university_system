@@ -1,6 +1,10 @@
 <?php
 include 'db_connection.php';
 
+// Fetch departments for dropdown
+$departments_sql = "SELECT DISTINCT department_name FROM department";
+$departments_result = $conn->query($departments_sql);
+
 // Handle Create Operation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create'])) {
     $first_name = $_POST['first_name'];
@@ -233,6 +237,33 @@ $result = $conn->query($sql);
             transition: background-color 0.3s;
         }
 
+        select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            margin-top: 10px;
+            width: 25%;
+            font-size: 16px;
+            background-color: #555;
+            color: white;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            border-color: #007BFF; /* Change border color on focus */
+            outline: none; /* Remove default outline */
+        }
+
+        select option {
+            padding: 10px; /* Padding for options */
+        }
+
+        /* Adding a hover effect for better UX */
+        select:hover {
+            border-color: #007BFF; /* Change border color on hover */
+        }
+
     </style>
 </head>
 <body>
@@ -247,18 +278,35 @@ $result = $conn->query($sql);
     <h3>Add New Student</h3>
         <form method="POST" class="student-form">
             <input type="hidden" id="student_id" name="student_id" value="<?php echo isset($row) ? $row['student_id'] : ''; ?>">
+            
             <label>First Name:</label>
             <input type="text" id="first_name" name="first_name" required value="<?php echo isset($row) ? $row['first_name'] : ''; ?>">
+            
             <label>Middle Initial:</label>
             <input type="text" id="middle_initial" name="middle_initial" maxlength="1" value="<?php echo isset($row) ? $row['middle_initial'] : ''; ?>">
+            
             <label>Last Name:</label>
             <input type="text" id="last_name" name="last_name" required value="<?php echo isset($row) ? $row['last_name'] : ''; ?>">
+            
             <label>Date of Birth:</label>
             <input type="date" id="date_of_birth" name="date_of_birth" required value="<?php echo isset($row) ? $row['date_of_birth'] : ''; ?>">
-            <label>Department Name:</label>
-            <input type="text" id="department_name" name="department_name" required value="<?php echo isset($row) ? $row['department_name'] : ''; ?>">
+
             <label>Email:</label>
             <input type="email" id="email" name="email" required value="<?php echo isset($row) ? $row['email'] : ''; ?>">
+            
+            <label>Department Name:</label><br>
+                <select id="department_name" name="department_name" required>
+                    <option value="">Select Department</option>
+                    <?php
+                    if ($departments_result->num_rows > 0) {
+                        while ($department = $departments_result->fetch_assoc()) {
+                            $selected = (isset($row) && $row['department_name'] == $department['department_name']) ? 'selected' : '';
+                            echo "<option value=\"{$department['department_name']}\" $selected>{$department['department_name']}</option>";
+                        }
+                    }
+                    ?>
+                </select>
+
             <div class="form-group">
                 <input type="submit" name="<?php echo isset($row) ? 'update' : 'create'; ?>" value="<?php echo isset($row) ? 'Update Student' : 'Create Student'; ?>">
                 <input type="button" class="submit-button" value="Clear" onclick="clearForm()">

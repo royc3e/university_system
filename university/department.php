@@ -5,7 +5,7 @@ include 'db_connection.php';
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create'])) {
     $department_name = $_POST['department_name'];
     $building = $_POST['building'];
-    $budget = $_POST['budget'];
+    $budget = !empty($_POST['budget']) ? $_POST['budget'] : null; // Optional budget
 
     // Check for duplicates
     $check_sql = "SELECT * FROM department WHERE department_name='$department_name' AND building='$building' AND budget='$budget'";
@@ -255,7 +255,7 @@ $result = $conn->query($sql);
 
             <div class="form-group">
                 <label for="budget">Budget:</label>
-                <input type="number" id="budget" name="budget" required step="0.01" value="<?php echo isset($row) ? $row['budget'] : ''; ?>">
+                <input type="number" id="budget" name="budget" step="0.01" value="<?php echo isset($row) ? $row['budget'] : ''; ?>">
             </div>
 
             <input type="submit" class="submit-button" name="<?php echo isset($row) ? 'update' : 'create'; ?>" value="<?php echo isset($row) ? 'Update Department' : 'Create Department'; ?>">
@@ -279,7 +279,7 @@ $result = $conn->query($sql);
                         <td>{$row['department_id']}</td>
                         <td>{$row['department_name']}</td>
                         <td>{$row['building']}</td>
-                        <td>{$row['budget']}</td>
+                        <td>" . (is_null($row['budget']) ? 'NULL' : $row['budget']) . "</td>
                         <td>
                             <a href='department.php?edit={$row['department_id']}' class='action-link'>Edit</a> |
                             <a href='department.php?delete={$row['department_id']}' class='action-link'>Delete</a>

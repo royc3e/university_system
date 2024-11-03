@@ -63,6 +63,10 @@ if (isset($_GET['delete'])) {
     }
 }
 
+// Fetch distinct buildings from the department table
+$building_sql = "SELECT DISTINCT building FROM department";
+$building_result = $conn->query($building_sql);
+
 // Fetch all classrooms for display
 $sql = "SELECT * FROM classroom";
 $result = $conn->query($sql);
@@ -230,6 +234,33 @@ $result = $conn->query($sql);
         .submit-button:hover {
             background-color: #0056b3;
         }
+        
+        select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            margin-top: 10px;
+            width: 25%;
+            font-size: 16px;
+            background-color: #555;
+            color: white;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            border-color: #007BFF; /* Change border color on focus */
+            outline: none; /* Remove default outline */
+        }
+
+        select option {
+            padding: 10px; /* Padding for options */
+        }
+
+        /* Adding a hover effect for better UX */
+        select:hover {
+            border-color: #007BFF; /* Change border color on hover */
+        }
 
     </style>
 </head>
@@ -243,7 +274,18 @@ $result = $conn->query($sql);
     <h3>Add New Classroom</h3>
     <form method="POST" class="classroom-form">
         <input type="hidden" name="classroom_id" value="<?php echo isset($row) ? $row['classroom_id'] : ''; ?>">
-        <label>Building:</label> <input type="text" id="building" name="building" required value="<?php echo isset($row) ? $row['building'] : ''; ?>">
+        <label>Building:</label> <br>
+            <select id="building" name="building" >
+                <option value="">Select Building</option>
+                <?php
+                if ($building_result->num_rows > 0) {
+                    while ($building_row = $building_result->fetch_assoc()) {
+                        $selected = (isset($row) && $row['building'] === $building_row['building']) ? 'selected' : '';
+                        echo "<option value='{$building_row['building']}' $selected>{$building_row['building']}</option>";
+                    }
+                }
+                ?>
+            </select><br>
         <label>Room Number:</label> <input type="text" id="room_number" name="room_number" required value="<?php echo isset($row) ? $row['room_number'] : ''; ?>">
         <label>Capacity:</label> <input type="number" id="capacity" name="capacity" required value="<?php echo isset($row) ? $row['capacity'] : ''; ?>">
     <div class="form-group">
