@@ -2,28 +2,30 @@
 include 'db_connection.php';
 
 // Fetch departments for dropdown
-$departments_sql = "SELECT DISTINCT department_name FROM department";
+$departments_sql = "SELECT DISTINCT department_id, department_name FROM department";
 $departments_result = $conn->query($departments_sql);
 
 // Handle Create Operation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create'])) {
+    $course_code = $_POST['course_code'];
     $course_name = $_POST['course_name'];
-    $department_name = $_POST['department_name'];
-    $credits = $_POST['credits'];
+    $total_credit = empty($_POST['total_credit']) ? "'N/A'" : $_POST['total_credit']; 
+    $department_id = $_POST['department_id'];
 
     // Check for duplicates before inserting
-    $check_sql = "SELECT * FROM course WHERE course_name = '$course_name' AND department_name = '$department_name'";
+    $check_sql = "SELECT * FROM course WHERE course_code = '$course_code'";
     $check_result = $conn->query($check_sql);
 
     if ($check_result->num_rows > 0) {
-        echo '<div class="error">Error: A course with the same name and department already exists.</div>';
+        echo '<div class="error">Error: A course with the same code already exists.</div>';
     } else {
         // Insert the new course
-        $sql = "INSERT INTO course (course_name, department_name, credits) VALUES ('$course_name', '$department_name', $credits)";
+        $sql = "INSERT INTO course (course_code, course_name, total_credit, department_id) 
+                VALUES ('$course_code', '$course_name', $total_credit, $department_id)";
         if ($conn->query($sql) === TRUE) {
-            echo '<div class="success">New course created successfully.</div>';  // Success message
+            echo '<div class="success">New course created successfully.</div>';
         } else {
-            echo '<div class="error">Error: ' . $conn->error . '</div>';  // Error message for insertion failure
+            echo '<div class="error">Error: ' . $conn->error . '</div>';
         }
     }
 }
@@ -38,20 +40,22 @@ if (isset($_GET['edit'])) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     $id = $_POST['course_id'];
+    $course_code = $_POST['course_code'];
     $course_name = $_POST['course_name'];
-    $department_name = $_POST['department_name'];
-    $credits = $_POST['credits'];
+    $total_credit = empty($_POST['total_credit']) ? "'N/A'" : $_POST['total_credit']; 
+    $department_id = $_POST['department_id'];
 
     $sql = "UPDATE course SET 
+        course_code='$course_code', 
         course_name='$course_name', 
-        department_name='$department_name', 
-        credits=$credits
+        total_credit=$total_credit, 
+        department_id=$department_id
         WHERE course_id='$id'";
 
     if ($conn->query($sql) === TRUE) {
-        echo '<div class="success">Course updated successfully.</div>';  // Success message
+        echo '<div class="success">Course updated successfully.</div>';
     } else {
-        echo '<div class="error">Error updating record: ' . $conn->error . '</div>';  // Error message
+        echo '<div class="error">Error updating record: ' . $conn->error . '</div>';
     }
 }
 
@@ -61,14 +65,16 @@ if (isset($_GET['delete'])) {
     $sql = "DELETE FROM course WHERE course_id='$id'";
 
     if ($conn->query($sql) === TRUE) {
-        echo '<div class="success">Course deleted successfully.</div>';  // Success message
+        echo '<div class="success">Course deleted successfully.</div>';
     } else {
-        echo '<div class="error">Error deleting record: ' . $conn->error . '</div>';  // Error message
+        echo '<div class="error">Error deleting record: ' . $conn->error . '</div>';
     }
 }
 
 // Fetch all courses for display
-$sql = "SELECT * FROM course";
+$sql = "SELECT c.course_id, c.course_code, c.course_name, c.total_credit, d.department_name 
+        FROM course c
+        LEFT JOIN department d ON c.department_id = d.department_id";
 $result = $conn->query($sql);
 ?>
 
@@ -83,6 +89,8 @@ $result = $conn->query($sql);
             background-color: #2c2c2c; /* Dark background */
             color: #e0e0e0; /* Light text color */
             margin: 20px;
+            display: flex;
+            align-items: center;
             text-align: center;
         }
         
@@ -146,7 +154,12 @@ $result = $conn->query($sql);
             background-color: #3c3c3c; /* Darker container background */
             border-radius: 8px; /* Rounded corners */
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5); /* Shadow effect */
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Center the contents horizontally */
+            justify-content: center; /* Center the contents vertically */
         }
+        
         table {
             width: 100%;
             border-collapse: collapse;
@@ -184,6 +197,7 @@ $result = $conn->query($sql);
 
         .course-form {
             background-color: #3c3c3c; /* Form background */
+            width: 500px;
             padding: 20px; /* Padding around form */
             border-radius: 8px; /* Rounded corners */
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); /* Shadow effect */
@@ -244,7 +258,7 @@ $result = $conn->query($sql);
             border: 1px solid #ccc;
             border-radius: 4px;
             margin-bottom: 10px;
-            width: 25%;
+            width: 50%;
             font-size: 16px;
             background-color: #555;
             color: white;
@@ -279,28 +293,33 @@ $result = $conn->query($sql);
             <input type="hidden" name="course_id" value="<?php echo isset($row) ? $row['course_id'] : ''; ?>">
 
             <div class="form-group">
+                <label for="course_code">Course Code:</label>
+                <input type="text" id="course_code" name="course_code" required value="<?php echo isset($row) ? $row['course_code'] : ''; ?>">
+            </div>
+
+            <div class="form-group">
                 <label for="course_name">Course Name:</label>
                 <input type="text" id="course_name" name="course_name" required value="<?php echo isset($row) ? $row['course_name'] : ''; ?>">
             </div>
 
             <div class="form-group">
-                <label for="department_name">Department Name:</label>
-                <select id="department_name" name="department_name" required>
-                <option value="">Select Department</option>
-                <?php
-                if ($departments_result->num_rows > 0) {
-                    while ($department = $departments_result->fetch_assoc()) {
-                        $selected = (isset($row) && $row['department_name'] == $department['department_name']) ? 'selected' : '';
-                        echo "<option value=\"{$department['department_name']}\" $selected>{$department['department_name']}</option>";
-                    }
-                }
-                ?>
-            </select>
+                <label for="total_credit">Total Credits:</label>
+                <input type="number" id="total_credit" name="total_credit"  value="<?php echo isset($row) ? $row['total_credit'] : ''; ?>">
             </div>
 
             <div class="form-group">
-                <label for="credits">Credits:</label>
-                <input type="number" id="credits" name="credits" value="<?php echo isset($row) ? $row['credits'] : ''; ?>"> <!-- Removed 'required' -->
+                <label for="department_id">Department Name:</label>
+                <select id="department_id" name="department_id" >
+                    <option value="">Select Department</option>
+                    <?php
+                    if ($departments_result->num_rows > 0) {
+                        while ($department = $departments_result->fetch_assoc()) {
+                            $selected = (isset($row) && $row['department_id'] == $department['department_id']) ? 'selected' : '';
+                            echo "<option value=\"{$department['department_id']}\" $selected>{$department['department_name']}</option>";
+                        }
+                    }
+                    ?>
+                </select>
             </div>
 
             <input type="submit" class="submit-button" name="<?php echo isset($row) ? 'update' : 'create'; ?>" value="<?php echo isset($row) ? 'Update Course' : 'Create Course'; ?>">
@@ -313,20 +332,20 @@ $result = $conn->query($sql);
     <h3>Course List</h3>
     <table>
         <tr>
-            <th>Course ID</th>
+            <th>Course Code</th>
             <th>Course Name</th>
+            <th>Total Credits</th>
             <th>Department Name</th>
-            <th>Credits</th>
             <th>Actions</th>
         </tr>
         <?php
         if ($result->num_rows > 0) {
             while($row = $result->fetch_assoc()) {
                 echo "<tr>
-                    <td>{$row['course_id']}</td>
+                    <td>{$row['course_code']}</td>
                     <td>{$row['course_name']}</td>
+                    <td>{$row['total_credit']}</td>
                     <td>{$row['department_name']}</td>
-                    <td>{$row['credits']}</td>
                     <td>
                         <a href='course.php?edit={$row['course_id']}'>Edit</a> | 
                         <a href='course.php?delete={$row['course_id']}'>Delete</a>
@@ -344,8 +363,9 @@ $result = $conn->query($sql);
 <script>
     function clearForm() {
         document.getElementById('course_name').value = '';
+        document.getElementById('course_code').value = '';
         document.getElementById('department_name').value = '';
-        document.getElementById('credits').value = '';
+        document.getElementById('total_credit').value = '';
     }
 </script>
 

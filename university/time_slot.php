@@ -74,6 +74,12 @@ $result = $conn->query($sql);
     <title>Time Slot Management</title>
     <link rel="stylesheet" type="text/css" href="styles.css">
     <style>
+        body {
+            display: flex;
+            justify-content: center;  /* Horizontal center */
+            align-items: center;
+        }
+        
         .error {
             background-color: #f8d7da;
             color: #721c24;
@@ -131,6 +137,7 @@ $result = $conn->query($sql);
         .time_slot-form {
             background-color: #3c3c3c;
             padding: 20px;
+            width: 500px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             margin-bottom: 20px;
@@ -153,6 +160,32 @@ $result = $conn->query($sql);
             transition: background-color 0.3s;
         }
 
+        select {
+            background-color: #555;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            width: 95%;
+            font-size: 16px;
+            transition: border-color 0.3s;
+            color: white;
+        }
+
+        select:focus {
+            border-color: #007BFF; /* Change border color on focus */
+            outline: none; /* Remove default outline */
+        }
+
+        select option {
+            padding: 10px; /* Padding for options */
+        }
+
+        /* Adding a hover effect for better UX */
+        select:hover {
+            border-color: #007BFF; /* Change border color on hover */
+        }
+
     </style>
 </head>
 <body>
@@ -166,8 +199,15 @@ $result = $conn->query($sql);
         <h3>Add New Time Slot</h3>
         <form method="POST" class="time_slot-form">
             <input type="hidden" name="time_slot_id" value="<?php echo isset($row) ? $row['time_slot_id'] : ''; ?>">
-            <label>Day of Week:</label> 
-            <input type="text"id="day_of_week" name="day_of_week" required value="<?php echo isset($row) ? $row['day_of_week'] : ''; ?>">
+            <label>Day of Week:</label>
+                <select id="day_of_week" name="day_of_week" required>
+                    <option value="Monday" <?php echo isset($row) && $row['day_of_week'] == 'Monday' ? 'selected' : ''; ?>>MONDAY</option>
+                    <option value="Tuesday" <?php echo isset($row) && $row['day_of_week'] == 'Tuesday' ? 'selected' : ''; ?>>TUESDAY</option>
+                    <option value="Wednesday" <?php echo isset($row) && $row['day_of_week'] == 'Wednesday' ? 'selected' : ''; ?>>WEDNESDAY</option>
+                    <option value="Thursday" <?php echo isset($row) && $row['day_of_week'] == 'Thursday' ? 'selected' : ''; ?>>THURSDAY</option>
+                    <option value="Friday" <?php echo isset($row) && $row['day_of_week'] == 'Friday' ? 'selected' : ''; ?>>FRIDAY</option>
+                </select>
+
             <label>Start Time:</label> 
             <input type="time" id="start_time" name="start_time" required value="<?php echo isset($row) ? $row['start_time'] : ''; ?>">
             <label>End Time:</label> 
@@ -180,7 +220,6 @@ $result = $conn->query($sql);
         <h3>Time Slot List</h3>
         <table>
             <tr>
-                <th>Time Slot ID</th>
                 <th>Day of Week</th>
                 <th>Start Time</th>
                 <th>End Time</th>
@@ -190,7 +229,6 @@ $result = $conn->query($sql);
             if ($result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
                     echo "<tr>
-                        <td>{$row['time_slot_id']}</td>
                         <td>{$row['day_of_week']}</td>
                         <td>{$row['start_time']}</td>
                         <td>{$row['end_time']}</td>

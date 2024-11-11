@@ -2,85 +2,107 @@
 include 'db_connection.php';
 
 // Fetch departments for dropdown
-$departments_sql = "SELECT DISTINCT department_name FROM department";
+$departments_sql = "SELECT department_id, department_name FROM department";
 $departments_result = $conn->query($departments_sql);
 
 // Handle Create Operation
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create'])) {
     $first_name = $_POST['first_name'];
-    $middle_initial = $_POST['middle_initial'];
     $last_name = $_POST['last_name'];
     $date_of_birth = $_POST['date_of_birth'];
-    $department_name = $_POST['department_name'];
-    $email = $_POST['email'];
+    $department_id = $_POST['department_id']; // Use department_id from dropdown
+    $identification_number = $_POST['identification_number'];
+    $total_credit = $_POST['total_credit'];  // Get the total_credit value
+    $street_number = $_POST['street_number'];
+    $street_name = $_POST['street_name'];
+    $apt_number = $_POST['apt_number'];
+    $city = $_POST['city'];
+    $state = $_POST['state'];
+    $postal_code = $_POST['postal_code'];
 
     // Check for duplicates before inserting
-    $check_sql = "SELECT * FROM student WHERE first_name = '$first_name' AND last_name = '$last_name' AND email = '$email'";
+    $check_sql = "SELECT * FROM student WHERE identification_number = '$identification_number'";
     $check_result = $conn->query($check_sql);
 
     if ($check_result->num_rows > 0) {
-        echo '<div class="error">Error: A student with the same name and email already exists.</div>';
+        echo '<div class="error">Error: A student with the same identification number already exists.</div>';
     } else {
-        // Insert the new student
-        $sql = "INSERT INTO student (first_name, middle_initial, last_name, date_of_birth, department_name, email) 
-                VALUES ('$first_name', '$middle_initial', '$last_name', '$date_of_birth', '$department_name', '$email')";
+        // Insert the new student including the required fields
+        $sql = "INSERT INTO student (first_name, last_name, date_of_birth, department_id, identification_number, total_credit, street_number, street_name, apt_number, city, state, postal_code) 
+                VALUES ('$first_name', '$last_name', '$date_of_birth', '$department_id', '$identification_number', '$total_credit', '$street_number', '$street_name', '$apt_number', '$city', '$state', '$postal_code')";
+
         if ($conn->query($sql) === TRUE) {
-            echo '<div class="success">New student created successfully.</div>';  // Success message
+            echo '<div class="success">New student created successfully.</div>';
         } else {
-            echo '<div class="error">Error: ' . $conn->error . '</div>';  // Error message for insertion failure
+            echo '<div class="error">Error: ' . $conn->error . '</div>';
         }
     }
 }
 
 // Handle Update Operation
 if (isset($_GET['edit'])) {
-    $id = $_GET['edit'];
-    $sql = "SELECT * FROM student WHERE student_id='$id'";
+    $identification_number = $_GET['edit'];
+    $sql = "SELECT * FROM student WHERE identification_number = '$identification_number'";
     $result = $conn->query($sql);
     $row = $result->fetch_assoc();
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
-    $id = $_POST['student_id'];
     $first_name = $_POST['first_name'];
-    $middle_initial = $_POST['middle_initial'];
     $last_name = $_POST['last_name'];
     $date_of_birth = $_POST['date_of_birth'];
-    $department_name = $_POST['department_name'];
-    $email = $_POST['email'];
+    $department_id = $_POST['department_id']; // Use department_id
+    $identification_number = $_POST['identification_number'];
+    $total_credit = $_POST['total_credit'];  // Get the total_credit value
+    $street_number = $_POST['street_number'];
+    $street_name = $_POST['street_name'];
+    $apt_number = $_POST['apt_number'];
+    $city = $_POST['city'];
+    $state = $_POST['state'];
+    $postal_code = $_POST['postal_code'];
 
     $sql = "UPDATE student SET 
+        identification_number = '$identification_number',
         first_name='$first_name', 
-        middle_initial='$middle_initial', 
         last_name='$last_name', 
         date_of_birth='$date_of_birth', 
-        department_name='$department_name', 
-        email='$email'
-        WHERE student_id='$id'";
+        department_id='$department_id', 
+        total_credit='$total_credit', 
+        street_number='$street_number', 
+        street_name='$street_name', 
+        apt_number='$apt_number', 
+        city='$city', 
+        state='$state', 
+        postal_code='$postal_code'
+        WHERE identification_number = '$identification_number'";
 
     if ($conn->query($sql) === TRUE) {
-        echo '<div class="success">Student updated successfully.</div>';  // Success message
+        echo '<div class="success">Student updated successfully.</div>';
     } else {
-        echo '<div class="error">Error updating record: ' . $conn->error . '</div>';  // Error message
+        echo '<div class="error">Error updating record: ' . $conn->error . '</div>';
     }
 }
 
 // Handle Delete Operation
 if (isset($_GET['delete'])) {
-    $id = $_GET['delete'];
-    $sql = "DELETE FROM student WHERE student_id='$id'";
+    $identification_number = $_GET['delete'];
+    $sql = "DELETE FROM student WHERE identification_number = '$identification_number'";
 
     if ($conn->query($sql) === TRUE) {
-        echo '<div class="success">Student deleted successfully.</div>';  // Success message
+        echo '<div class="success">Student deleted successfully.</div>';
     } else {
-        echo '<div class="error">Error deleting record: ' . $conn->error . '</div>';  // Error message
+        echo '<div class="error">Error deleting record: ' . $conn->error . '</div>';
     }
 }
 
-// Fetch all students for display
-$sql = "SELECT * FROM student";
-$result = $conn->query($sql);
+    // Fetch all students for display
+    $sql = "SELECT s.*, d.department_name 
+            FROM student s 
+            LEFT JOIN department d ON s.department_id = d.department_id";
+    $result = $conn->query($sql);
 ?>
+
+
 
 <!DOCTYPE html>
 <html>
@@ -89,23 +111,32 @@ $result = $conn->query($sql);
     <link rel="stylesheet" type="text/css" href="styles.css">
     <style>
         /* Error and Success Message Styles */
+        .error, .success {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            font-size: 14px; /* Smaller text size */
+            z-index: 9999; /* Ensure it's on top of other content */
+            width: auto;
+            max-width: 80%; /* Limit the width of the message */
+            text-align: center;
+        }
+
         .error {
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            animation: fadeOut 5s forwards; 
+            animation: fadeOut 5s forwards;
         }
 
         .success {
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
             animation: fadeOut 3s forwards;
         }
 
@@ -115,13 +146,15 @@ $result = $conn->query($sql);
             100% { opacity: 0; display: none; }
         }
 
-        /* General Page Styles */
+        
         body {
             font-family: Arial, sans-serif;
             background-color: #2c2c2c;
             color: #e0e0e0;
             text-align: center;
             margin: 20px;
+            display: flex;
+            justify-content: center;
         }
 
         h2, h3 {
@@ -162,7 +195,7 @@ $result = $conn->query($sql);
 
         /* Table Styles */
         table {
-            width: 100%;
+            width: 80%;
             border-collapse: collapse;
             margin-top: 20px;
         }
@@ -221,9 +254,11 @@ $result = $conn->query($sql);
         .student-form {
             background-color: #3c3c3c;
             padding: 20px;
+            width: 500px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             margin-bottom: 20px;
+            margin: 20px auto;
         }
 
         .submit-button {
@@ -243,7 +278,7 @@ $result = $conn->query($sql);
             border-radius: 4px;
             margin-bottom: 10px;
             margin-top: 10px;
-            width: 25%;
+            width: 50%;
             font-size: 16px;
             background-color: #555;
             color: white;
@@ -276,89 +311,120 @@ $result = $conn->query($sql);
 
     <!-- Create Form -->
     <h3>Add New Student</h3>
-        <form method="POST" class="student-form">
-            <input type="hidden" id="student_id" name="student_id" value="<?php echo isset($row) ? $row['student_id'] : ''; ?>">
-            
-            <label>First Name:</label>
-            <input type="text" id="first_name" name="first_name" required value="<?php echo isset($row) ? $row['first_name'] : ''; ?>">
-            
-            <label>Middle Initial:</label>
-            <input type="text" id="middle_initial" name="middle_initial" maxlength="1" value="<?php echo isset($row) ? $row['middle_initial'] : ''; ?>">
-            
-            <label>Last Name:</label>
-            <input type="text" id="last_name" name="last_name" required value="<?php echo isset($row) ? $row['last_name'] : ''; ?>">
-            
-            <label>Date of Birth:</label>
-            <input type="date" id="date_of_birth" name="date_of_birth" required value="<?php echo isset($row) ? $row['date_of_birth'] : ''; ?>">
+    <form method="POST" class="student-form">
 
-            <label>Email:</label>
-            <input type="email" id="email" name="email" required value="<?php echo isset($row) ? $row['email'] : ''; ?>">
-            
-            <label>Department Name:</label><br>
-                <select id="department_name" name="department_name" required>
-                    <option value="">Select Department</option>
-                    <?php
-                    if ($departments_result->num_rows > 0) {
-                        while ($department = $departments_result->fetch_assoc()) {
-                            $selected = (isset($row) && $row['department_name'] == $department['department_name']) ? 'selected' : '';
-                            echo "<option value=\"{$department['department_name']}\" $selected>{$department['department_name']}</option>";
-                        }
-                    }
-                    ?>
-                </select>
+        <label>Identification Number:</label>
+        <input type="text" id="identification_number" name="identification_number" value="<?php echo isset($row) ? $row['identification_number'] : ''; ?>">
 
-            <div class="form-group">
-                <input type="submit" name="<?php echo isset($row) ? 'update' : 'create'; ?>" value="<?php echo isset($row) ? 'Update Student' : 'Create Student'; ?>">
-                <input type="button" class="submit-button" value="Clear" onclick="clearForm()">
-            </div>
-        </form>
+        <label>First Name:</label>
+        <input type="text" id="first_name" name="first_name" value="<?php echo isset($row) ? $row['first_name'] : ''; ?>" required>
 
-    <!-- Read Table -->
-    <h3>Student List</h3>
+        <label>Last Name:</label>
+        <input type="text" id="last_name" name="last_name" value="<?php echo isset($row) ? $row['last_name'] : ''; ?>" required>
+
+        <label>Date of Birth:</label>
+        <input type="date" id="date_of_birth" name="date_of_birth" value="<?php echo isset($row) ? $row['date_of_birth'] : ''; ?>" required>
+
+        <label>Total Credit:</label>
+        <input type="number" id="total_credit" name="total_credit" min="0" max="999" value="<?php echo isset($row) ? $row['total_credit'] : ''; ?>">
+
+        <label>Street Number:</label>
+        <input type="text" id="street_number" name="street_number" value="<?php echo isset($row) ? $row['street_number'] : ''; ?>">
+
+        <label>Street Name:</label>
+        <input type="text" id="street_name" name="street_name" value="<?php echo isset($row) ? $row['street_name'] : ''; ?>">
+
+        <label>Apt Number:</label>
+        <input type="text" id="apt_number" name="apt_number" value="<?php echo isset($row) ? $row['apt_number'] : ''; ?>">
+
+        <label>City:</label>
+        <input type="text" id="city" name="city" value="<?php echo isset($row) ? $row['city'] : ''; ?>">
+
+        <label>State:</label>
+        <input type="text" id="state" name="state" value="<?php echo isset($row) ? $row['state'] : ''; ?>">
+
+        <label>Postal Code:</label>
+        <input type="text" id="postal_code" name="postal_code" value="<?php echo isset($row) ? $row['postal_code'] : ''; ?>">
+
+        <label>Department:</label>
+        <select id="department_id" name="department_id" required>
+            <option value="">Select Department</option>
+            <?php
+            // Fetch departments for the dropdown
+            $departments_sql = "SELECT department_id, department_name FROM department";
+            $departments_result = $conn->query($departments_sql);
+            if ($departments_result->num_rows > 0) {
+                while($department = $departments_result->fetch_assoc()) {
+                    $selected = (isset($row) && $row['department_id'] == $department['department_id']) ? 'selected' : '';
+                    echo "<option value=\"{$department['department_id']}\" $selected>{$department['department_name']}</option>";
+                }
+            }
+            ?>
+        </select>
+
+        <div class="form-group">
+            <input type="submit" name="<?php echo isset($row) ? 'update' : 'create'; ?>" value="<?php echo isset($row) ? 'Update Student' : 'Create Student'; ?>">
+            <input type="button" class="submit-button" value="Clear" onclick="clearForm()">
+        </div>
+    </form>
+
+   <!-- Read Table -->
+   <h3>Student List</h3>
     <table>
         <tr>
-            <th>Student ID</th>
+            <th>Identification Number</th> 
             <th>First Name</th>
-            <th>Middle Initial</th>
             <th>Last Name</th>
             <th>Date of Birth</th>
-            <th>Department Name</th>
-            <th>Email</th>
+            <th>Department</th> <!-- Display department name using department_id -->
+            <th>Total Credit</th> <!-- Updated to Total Credit -->
             <th>Actions</th>
         </tr>
         <?php
+        // Fetch all students for display
+        $sql = "SELECT * FROM student";
+        $result = $conn->query($sql);
+
         if ($result->num_rows > 0) {
             while($row = $result->fetch_assoc()) {
+                // Fetch department name based on department_id
+                $department_sql = "SELECT department_name FROM department WHERE department_id = {$row['department_id']}";
+                $department_result = $conn->query($department_sql);
+                $department_name = $department_result->num_rows > 0 ? $department_result->fetch_assoc()['department_name'] : 'N/A';
+
                 echo "<tr>
-                    <td>{$row['student_id']}</td>
+                    <td>{$row['identification_number']}</td> <!-- Display Identification Number -->
                     <td>{$row['first_name']}</td>
-                    <td>{$row['middle_initial']}</td>
                     <td>{$row['last_name']}</td>
                     <td>{$row['date_of_birth']}</td>
-                    <td>{$row['department_name']}</td>
-                    <td>{$row['email']}</td>
+                    <td>{$department_name}</td> <!-- Display Department Name -->
+                    <td>{$row['total_credit']}</td> <!-- Display Total Credit -->
                     <td>
-                        <a href='student.php?edit={$row['student_id']}'>Edit</a> | 
-                        <a href='student.php?delete={$row['student_id']}'>Delete</a>
+                        <a href='student.php?edit={$row['identification_number']}'>Edit</a> | 
+                        <a href='student.php?delete={$row['identification_number']}'>Delete</a>
                     </td>
                 </tr>";
             }
         } else {
-            echo "<tr><td colspan='8'>No students found</td></tr>";
+            echo "<tr><td colspan='7'>No students found</td></tr>"; // Adjusted colspan to match number of columns
         }
         ?>
     </table>
-</div>
 
     <script>
         function clearForm() {
-            document.getElementById('student_id').value = '';
+            document.getElementById('identification_number').value = '';
             document.getElementById('first_name').value = '';
-            document.getElementById('middle_initial').value = '';
             document.getElementById('last_name').value = '';
             document.getElementById('date_of_birth').value = '';
-            document.getElementById('department_name').value = '';
-            document.getElementById('email').value = '';
+            document.getElementById('total_credit').value = '';
+            document.getElementById('street_number').value = '';
+            document.getElementById('street_name').value = '';
+            document.getElementById('apt_number').value = '';
+            document.getElementById('city').value = '';
+            document.getElementById('state').value = '';
+            document.getElementById('postal_code').value = '';
+            document.getElementById('department_id').value = '';
         }
     </script>
 

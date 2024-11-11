@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create'])) {
     $date_of_birth = $_POST['date_of_birth'];
     $salary = $_POST['salary'];
     $department_id = $_POST['department_id'];
+    $identification_number = $_POST['identification_number'];  // Added
 
     // Check for duplicate instructor
     $check_sql = "SELECT * FROM instructor WHERE first_name=? AND last_name=? AND date_of_birth=?";
@@ -34,10 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['create'])) {
         // Handle department_id for insert
         $department_value = empty($department_id) ? NULL : $department_id;
 
-        $sql = "INSERT INTO instructor (first_name, middle_initial, last_name, street_number, street_name, apt_number, city, state, postal_code, date_of_birth, department_id, salary) 
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $sql = "INSERT INTO instructor (first_name, middle_initial, last_name, street_number, street_name, apt_number, city, state, postal_code, date_of_birth, department_id, salary, identification_number) 
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param('sssssssssssd', $first_name, $middle_initial, $last_name, $street_number, $street_name, $apt_number, $city, $state, $postal_code, $date_of_birth, $department_value, $salary);
+        $stmt->bind_param('ssssssssssssd', $first_name, $middle_initial, $last_name, $street_number, $street_name, $apt_number, $city, $state, $postal_code, $date_of_birth, $department_value, $salary, $identification_number);
 
         if ($stmt->execute()) {
             echo '<div class="success">New instructor created successfully.</div>';
@@ -57,6 +58,7 @@ if (isset($_GET['edit'])) {
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
     $salary = isset($row) ? $row['salary'] : '';
+    $identification_number = isset($row) ? $row['identification_number'] : ''; // Added
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
@@ -73,23 +75,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
     $date_of_birth = $_POST['date_of_birth'];
     $salary = $_POST['salary'];
     $department_id = $_POST['department_id'];
+    $identification_number = $_POST['identification_number'];  // Added
 
+    // Handle department_id for update
     $department_value = empty($department_id) ? NULL : $department_id;
 
-    $sql = "UPDATE instructor SET 
-                first_name=?, middle_initial=?, last_name=?,
-                street_number=?, street_name=?, apt_number=?,
-                city=?, state=?, postal_code=?, date_of_birth=?, 
-                department_id=?, salary=?
+    $sql = "UPDATE instructor SET first_name=?, middle_initial=?, last_name=?, street_number=?, street_name=?, apt_number=?, city=?, state=?, postal_code=?, date_of_birth=?, department_id=?, salary=?, identification_number=? 
             WHERE instructor_id=?";
-    
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('ssssssssssdsd', $first_name, $middle_initial, $last_name, $street_number, $street_name, $apt_number, $city, $state, $postal_code, $date_of_birth, $department_value, $salary, $id);
+    $stmt->bind_param('ssssssssssssdi', $first_name, $middle_initial, $last_name, $street_number, $street_name, $apt_number, $city, $state, $postal_code, $date_of_birth, $department_value, $salary, $identification_number, $id);
 
     if ($stmt->execute()) {
         echo '<div class="success">Instructor updated successfully.</div>';
     } else {
-        echo '<div class="error">Error updating record: ' . $stmt->error . '</div>';
+        echo '<div class="error">Error: ' . $stmt->error . '</div>';
     }
 }
 
@@ -106,6 +105,8 @@ if (isset($_GET['delete'])) {
         echo '<div class="error">Error deleting record: ' . $stmt->error . '</div>';
     }
 }
+
+
 
 // Fetch all instructors for display
 $sql = "SELECT instructor.*, department.department_name 
@@ -135,23 +136,32 @@ $result = $conn->query($sql);
             text-align: center;
         }
 
+        .error, .success {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            font-size: 14px; /* Smaller text size */
+            z-index: 9999; /* Ensure it's on top of other content */
+            width: auto;
+            max-width: 80%; /* Limit the width of the message */
+            text-align: center;
+        }
+
         .error {
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            animation: fadeOut 5s forwards; 
+            animation: fadeOut 5s forwards;
         }
 
         .success {
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
             animation: fadeOut 3s forwards;
         }
 
@@ -196,10 +206,10 @@ $result = $conn->query($sql);
 
         .container {
             text-align: left;
-            max-width: 1050px;
+            max-width: 800px;
             margin: auto;
             padding: 20px;
-            background-color: #3c3c3c;
+            background-color: #333;
             border-radius: 8px;
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
         }
@@ -307,9 +317,33 @@ $result = $conn->query($sql);
         }
 
         .form-group {
-            display: flex;                  /* Use flexbox */
-            justify-content: center;        /* Center the button horizontally */
-            margin-top: 20px;              /* Space above the button */
+            flex: 1;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .form-actions {
+            text-align: left;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 8px;
+            font-size: 14px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        .form-group input[type="date"] {
+            max-width: 250px;
         }
 
         select {
@@ -318,7 +352,7 @@ $result = $conn->query($sql);
             border: 1px solid #ccc;
             border-radius: 4px;
             margin-bottom: 10px;
-            width: 35%;
+            width: 95%;
             font-size: 16px;
             transition: border-color 0.3s;
             color: white;
@@ -338,6 +372,16 @@ $result = $conn->query($sql);
             border-color: #007BFF; /* Change border color on hover */
         }
 
+        .instructor-list {
+            text-align: left;
+            max-width: 1050px;
+            margin: auto;
+            padding: 20px;
+            background-color: #333;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+        }
+
     </style>
 </head>
 <body>
@@ -350,20 +394,79 @@ $result = $conn->query($sql);
 
     <!-- Create Form -->
     <h3>Add New Instructor</h3>
-        <form method="POST" class="instructor-form">
-            <input type="hidden" id="instructor_id" name="instructor_id" value="<?php echo isset($row) ? $row['instructor_id'] : ''; ?>">
-            <label>First Name:</label> <input type="text" id="first_name" name="first_name" required value="<?php echo isset($row) ? $row['first_name'] : ''; ?>">
-            <label>Middle Initial:</label> <input type="text" id="middle_initial" name="middle_initial" value="<?php echo isset($row) ? $row['middle_initial'] : ''; ?>">
-            <label>Last Name:</label> <input type="text" id="last_name" name="last_name" required value="<?php echo isset($row) ? $row['last_name'] : ''; ?>">
-            <label>Street Number:</label> <input type="text" id="street_number" name="street_number" value="<?php echo isset($row) ? $row['street_number'] : ''; ?>">
-            <label>Street Name:</label> <input type="text" id="street_name" name="street_name" value="<?php echo isset($row) ? $row['street_name'] : ''; ?>">
-            <label>Apt Number:</label> <input type="text" id="apt_number" name="apt_number" value="<?php echo isset($row) ? $row['apt_number'] : ''; ?>">
-            <label>City:</label> <input type="text" id="city" name="city" value="<?php echo isset($row) ? $row['city'] : ''; ?>">
-            <label>Province:</label> <input type="text" id="state" name="state" value="<?php echo isset($row) ? $row['state'] : ''; ?>">
-            <label>Postal Code:</label> <input type="text" id="postal_code" name="postal_code" value="<?php echo isset($row) ? $row['postal_code'] : ''; ?>">
-            <label>Date of Birth:</label> <input type="date" id="date_of_birth" name="date_of_birth" value="<?php echo isset($row) ? $row['date_of_birth'] : ''; ?>">
-            <label>Salary:</label> <input type="number" step="0.01" id="salary" name="salary" value="<?php echo isset($row) ? $row['salary'] : ''; ?>">
-            <label>Department:</label>
+    <form method="POST" class="instructor-form">
+        <input type="hidden" id="instructor_id" name="instructor_id" value="<?php echo isset($row) ? $row['instructor_id'] : ''; ?>">
+
+        <!-- Form Fields -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="identification_number">Identification Number:</label>
+                <input type="text" id="identification_number" name="identification_number" value="<?php echo isset($row) ? $row['identification_number'] : ''; ?>" required>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="first_name">First Name:</label>
+                <input type="text" id="first_name" name="first_name" required value="<?php echo isset($row) ? $row['first_name'] : ''; ?>">
+            </div>
+            <div class="form-group">
+                <label for="middle_initial">Middle Initial:</label>
+                <input type="text" id="middle_initial" name="middle_initial" value="<?php echo isset($row) ? $row['middle_initial'] : ''; ?>">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="last_name">Last Name:</label>
+                <input type="text" id="last_name" name="last_name" required value="<?php echo isset($row) ? $row['last_name'] : ''; ?>">
+            </div>
+            <div class="form-group">
+                <label for="street_number">Street Number:</label>
+                <input type="text" id="street_number" name="street_number" value="<?php echo isset($row) ? $row['street_number'] : ''; ?>">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="street_name">Street Name:</label>
+                <input type="text" id="street_name" name="street_name" value="<?php echo isset($row) ? $row['street_name'] : ''; ?>">
+            </div>
+            <div class="form-group">
+                <label for="apt_number">Apt Number:</label>
+                <input type="text" id="apt_number" name="apt_number" value="<?php echo isset($row) ? $row['apt_number'] : ''; ?>">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="city">City:</label>
+                <input type="text" id="city" name="city" value="<?php echo isset($row) ? $row['city'] : ''; ?>">
+            </div>
+            <div class="form-group">
+                <label for="state">Province:</label>
+                <input type="text" id="state" name="state" value="<?php echo isset($row) ? $row['state'] : ''; ?>">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="postal_code">Postal Code:</label>
+                <input type="text" id="postal_code" name="postal_code" value="<?php echo isset($row) ? $row['postal_code'] : ''; ?>">
+            </div>
+            <div class="form-group">
+                <label for="date_of_birth">Date of Birth:</label>
+                <input type="date" id="date_of_birth" name="date_of_birth" value="<?php echo isset($row) ? $row['date_of_birth'] : ''; ?>">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="salary">Salary:</label>
+                <input type="number" step="0.01" id="salary" name="salary" value="<?php echo isset($row) ? $row['salary'] : ''; ?>">
+            </div>
+            <div class="form-group">
+                <label for="department_id">Department:</label>
                 <select id="department_id" name="department_id" class="department">
                     <option value="">Select Department</option>
                     <?php foreach ($departments as $dept): ?>
@@ -373,19 +476,22 @@ $result = $conn->query($sql);
                         </option>
                     <?php endforeach; ?>
                 </select>
-
-            <div class="form-group">
-                <input type="submit" name="<?php echo isset($row) ? 'update' : 'create'; ?>" value="<?php echo isset($row) ? 'Update Instructor' : 'Create Instructor'; ?>">
-                <input type="button" class="submit-button" value="Clear" onclick="clearForm()">
             </div>
-        </form>
-    </div>
-<div class="container instructor-list">
+        </div>
+
+        <div class="form-actions">
+            <input type="submit" name="<?php echo isset($row) ? 'update' : 'create'; ?>" value="<?php echo isset($row) ? 'Update Instructor' : 'Create Instructor'; ?>"><br>
+            <input type="button" class="submit-button" value="Clear" onclick="clearForm()">
+        </div>
+    </form>
+</div>
+
+<div class="instructor-list">
     <h3>Instructor List</h3>
     <table>
         <thead>
             <tr>
-                <th>ID</th>
+                <th>Identification Number</th>
                 <th>First Name</th>
                 <th>Middle Initial</th>
                 <th>Last Name</th>
@@ -406,7 +512,7 @@ $result = $conn->query($sql);
             if ($result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
                     echo "<tr>
-                        <td>{$row['instructor_id']}</td>
+                        <td>" . htmlspecialchars($row['identification_number']) . "</td>
                         <td>{$row['first_name']}</td>
                         <td>{$row['middle_initial']}</td>
                         <td>{$row['last_name']}</td>
@@ -416,7 +522,7 @@ $result = $conn->query($sql);
                         <td>{$row['city']}</td>
                         <td>{$row['state']}</td>
                         <td>{$row['postal_code']}</td>
-                        <td>{$row['date_of_birth']}</td>
+                        <td>" . date('F j, Y', strtotime($row['date_of_birth'])) . "</td>
                         <td>" . htmlspecialchars($row['salary']) . "</td>   
                         <td>" . (is_null($row['department_name']) ? 'N/A' : htmlspecialchars($row['department_name'])) . "</td>
                         <td>
@@ -434,6 +540,7 @@ $result = $conn->query($sql);
 </div>
     <script>
         function clearForm() {
+            document.getElementById('identification_number').value = '';
             document.getElementById('first_name').value = '';
             document.getElementById('middle_initial').value = '';
             document.getElementById('last_name').value = '';

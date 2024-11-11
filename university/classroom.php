@@ -84,6 +84,8 @@ $result = $conn->query($sql);
             color: #e0e0e0; /* Light text color */
             margin: 20px;
             text-align: center;
+            display: flex;
+            justify-content: center;
         }
 
         h2, h3 {
@@ -92,23 +94,32 @@ $result = $conn->query($sql);
             text-align: center;
         }
 
+        .error, .success {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            font-size: 14px; /* Smaller text size */
+            z-index: 9999; /* Ensure it's on top of other content */
+            width: auto;
+            max-width: 80%; /* Limit the width of the message */
+            text-align: center;
+        }
+
         .error {
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            animation: fadeOut 5s forwards; 
+            animation: fadeOut 5s forwards;
         }
 
         .success {
-            background-color: #d4edda;  /* Light green background */
-            color: #155724;  /* Dark green text color */
-            border: 1px solid #c3e6cb;  /* Light green border */
-            padding: 10px;  /* Padding around the text */
-            margin-bottom: 20px;  /* Margin below the success message */
-            border-radius: 5px;  /* Rounded corners */
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
             animation: fadeOut 3s forwards;
         }
 
@@ -193,6 +204,7 @@ $result = $conn->query($sql);
         .classroom-form {
             background-color: #3c3c3c;
             padding: 20px;
+            width: 500px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             margin-bottom: 20px;
@@ -241,7 +253,7 @@ $result = $conn->query($sql);
             border-radius: 4px;
             margin-bottom: 10px;
             margin-top: 10px;
-            width: 25%;
+            width: 50%;
             font-size: 16px;
             background-color: #555;
             color: white;
@@ -274,18 +286,9 @@ $result = $conn->query($sql);
     <h3>Add New Classroom</h3>
     <form method="POST" class="classroom-form">
         <input type="hidden" name="classroom_id" value="<?php echo isset($row) ? $row['classroom_id'] : ''; ?>">
-        <label>Building:</label> <br>
-            <select id="building" name="building" >
-                <option value="">Select Building</option>
-                <?php
-                if ($building_result->num_rows > 0) {
-                    while ($building_row = $building_result->fetch_assoc()) {
-                        $selected = (isset($row) && $row['building'] === $building_row['building']) ? 'selected' : '';
-                        echo "<option value='{$building_row['building']}' $selected>{$building_row['building']}</option>";
-                    }
-                }
-                ?>
-            </select><br>
+        <label for="building">Building:</label> <br>
+        <input type="text" id="building" name="building" value="<?php echo isset($row) ? htmlspecialchars($row['building']) : ''; ?>" placeholder="Enter Building Name"><br>
+
         <label>Room Number:</label> <input type="text" id="room_number" name="room_number" required value="<?php echo isset($row) ? $row['room_number'] : ''; ?>">
         <label>Capacity:</label> <input type="number" id="capacity" name="capacity" required value="<?php echo isset($row) ? $row['capacity'] : ''; ?>">
     <div class="form-group">
@@ -298,7 +301,6 @@ $result = $conn->query($sql);
     <h3>Classroom List</h3>
     <table>
         <tr>
-            <th>Classroom ID</th>
             <th>Building</th>
             <th>Room Number</th>
             <th>Capacity</th>
@@ -308,7 +310,6 @@ $result = $conn->query($sql);
         if ($result->num_rows > 0) {
             while($row = $result->fetch_assoc()) {
                 echo "<tr>
-                    <td>{$row['classroom_id']}</td>
                     <td>{$row['building']}</td>
                     <td>{$row['room_number']}</td>
                     <td>{$row['capacity']}</td>

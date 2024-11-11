@@ -78,6 +78,8 @@ $result = $conn->query($sql);
             color: #e0e0e0; /* Light text color */
             margin: 20px;
             text-align: center;
+            display: flex;
+            justify-content: center;
         }
 
         h2, h3 {
@@ -85,23 +87,33 @@ $result = $conn->query($sql);
             margin-bottom: 10px;
         }
 
+
+        .error, .success {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            font-size: 14px; /* Smaller text size */
+            z-index: 9999; /* Ensure it's on top of other content */
+            width: auto;
+            max-width: 80%; /* Limit the width of the message */
+            text-align: center;
+        }
+
         .error {
             background-color: #f8d7da;
             color: #721c24;
             border: 1px solid #f5c6cb;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
-            animation: fadeOut 5s forwards; 
+            animation: fadeOut 5s forwards;
         }
 
         .success {
             background-color: #d4edda;
             color: #155724;
             border: 1px solid #c3e6cb;
-            padding: 10px;
-            margin-bottom: 20px;
-            border-radius: 5px;
             animation: fadeOut 3s forwards;
         }
 
@@ -190,9 +202,10 @@ $result = $conn->query($sql);
             text-decoration: underline;
         }
 
-        .course-form {
+        .department-form {
             background-color: #3c3c3c;
             padding: 20px;
+            width: 500px;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             margin-bottom: 20px;
@@ -231,6 +244,33 @@ $result = $conn->query($sql);
         input[type="submit"]:hover, input[type="button"]:hover {
             background-color: #0056b3;
         }
+
+        select {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            margin-top: 10px;
+            width: 50%;
+            font-size: 16px;
+            background-color: #555;
+            color: white;
+            transition: border-color 0.3s;
+        }
+
+        select:focus {
+            border-color: #007BFF; /* Change border color on focus */
+            outline: none; /* Remove default outline */
+        }
+
+        select option {
+            padding: 10px; /* Padding for options */
+        }
+
+        /* Adding a hover effect for better UX */
+        select:hover {
+            border-color: #007BFF; /* Change border color on hover */
+        }
     </style>
 </head>
 <body>
@@ -241,7 +281,7 @@ $result = $conn->query($sql);
 
         <!-- Create Form -->
         <h3>Add New Department</h3>
-        <form method="POST" class="course-form">
+        <form method="POST" class="department-form">
             <input type="hidden" name="department_id" value="<?php echo isset($row) ? $row['department_id'] : ''; ?>">
             <div class="form-group">
                 <label for="department_name">Department Name:</label>
@@ -250,7 +290,22 @@ $result = $conn->query($sql);
 
             <div class="form-group">
                 <label for="building">Building:</label>
-                <input type="text" id="building" name="building" required value="<?php echo isset($row) ? $row['building'] : ''; ?>">
+                <select id="building" name="building" required>
+                    <option value="">Select Building</option>
+                    <?php
+                    // Fetch building names from the classroom table
+                    $building_sql = "SELECT DISTINCT building FROM classroom";
+                    $building_result = $conn->query($building_sql);
+
+                    if ($building_result->num_rows > 0) {
+                        while ($building_row = $building_result->fetch_assoc()) {
+                            // Check if this building is selected in the form (for editing)
+                            $selected = (isset($row) && $row['building'] === $building_row['building']) ? 'selected' : '';
+                            echo "<option value='{$building_row['building']}' $selected>{$building_row['building']}</option>";
+                        }
+                    }
+                    ?>
+                </select>
             </div>
 
             <div class="form-group">
@@ -266,7 +321,6 @@ $result = $conn->query($sql);
         <h3>Department List</h3>
         <table>
             <tr>
-                <th>ID</th>
                 <th>Department Name</th>
                 <th>Building</th>
                 <th>Budget</th>
@@ -276,7 +330,6 @@ $result = $conn->query($sql);
             if ($result->num_rows > 0) {
                 while($row = $result->fetch_assoc()) {
                     echo "<tr>
-                        <td>{$row['department_id']}</td>
                         <td>{$row['department_name']}</td>
                         <td>{$row['building']}</td>
                         <td>" . (is_null($row['budget']) ? 'NULL' : $row['budget']) . "</td>
